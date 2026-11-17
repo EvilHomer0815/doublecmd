@@ -54,20 +54,23 @@ begin
       try
         FPReaderJPEG.ImageRead(FileStream, LazIntfImage);
         LazIntfImage.GetRawImage(RawImage, True);
-        if not ((LazIntfImage.Width > aSize.cx) or (LazIntfImage.Height > aSize.cy)) then
-          Result.LoadFromRawImage(RawImage, True)
-        else
-          begin
-            Bitmap:= TBitmap.Create;
-            try
-              Bitmap.LoadFromRawImage(RawImage, True);
+        Bitmap:= TBitmap.Create;
+        try
+          Bitmap.LoadFromRawImage(RawImage, True);
+          // Apply the EXIF orientation before the size is judged: turning the
+          // image swaps width and height, and the preview scale needs both.
+          ApplyExifOrientation(aFileName, Bitmap);
+          if not ((Bitmap.Width > aSize.cx) or (Bitmap.Height > aSize.cy)) then
+            Result.Assign(Bitmap)
+          else
+            begin
               aSize:= TThumbnailManager.GetPreviewScaleSize(Bitmap.Width, Bitmap.Height);
               Result.SetSize(aSize.cx, aSize.cy);
               Stretch(Bitmap, Result, ResampleFilters[2].Filter, ResampleFilters[2].Width);
-            finally
-              Bitmap.Free;
             end;
-          end;
+        finally
+          Bitmap.Free;
+        end;
       finally
         FPReaderJPEG.Free;
         LazIntfImage.Free;

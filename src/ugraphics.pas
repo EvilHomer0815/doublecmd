@@ -36,6 +36,8 @@ procedure BitmapAlpha(var ABitmap: TBitmap; APercent: Single);
 procedure BitmapAssign(Bitmap: TRasterImage; Image: TLazIntfImage);
 procedure BitmapCenter(var Bitmap: TBitmap; Width, Height: Integer);
 procedure BitmapMerge(ALow, AHigh: TLazIntfImage; const ADestX, ADestY: Integer);
+procedure BitmapRotate(ARaster: TRasterImage; AGradus: Integer);
+procedure BitmapMirror(ARaster: TRasterImage; AVertically: Boolean = False);
 
 implementation
 
@@ -224,6 +226,90 @@ begin
         ALow.Colors[CurX, CurY] := CurColor;
       end;
     end;
+  end;
+end;
+
+procedure BitmapRotate(ARaster: TRasterImage; AGradus: Integer);
+// Turns the image clockwise by 90, 180 or 270 degrees, in place.
+// The pixel loops are the ones the internal viewer uses (fviewer.pas).
+var
+  Source, Target: TLazIntfImage;
+  x, y, xWidth, yHeight: Integer;
+begin
+  if (ARaster = nil) or (ARaster.Width <= 0) or (ARaster.Height <= 0) then Exit;
+  if (AGradus <> 90) and (AGradus <> 180) and (AGradus <> 270) then Exit;
+  Source:= ARaster.CreateIntfImage;
+  try
+    Target:= TLazIntfImage.Create(0, 0);
+    try
+      Target.DataDescription:= Source.DataDescription; // use the same image format
+      xWidth:= Source.Width - 1;
+      yHeight:= Source.Height - 1;
+      if AGradus = 180 then
+      begin
+        Target.SetSize(xWidth + 1, yHeight + 1);
+        for y:= 0 to yHeight do
+          for x:= 0 to xWidth do
+            Target.Colors[x, y]:= Source.Colors[xWidth - x, yHeight - y];
+      end
+      else
+      begin
+        Target.SetSize(yHeight + 1, xWidth + 1);
+        if AGradus = 90 then
+        begin
+          for y:= 0 to xWidth do
+            for x:= 0 to yHeight do
+              Target.Colors[x, y]:= Source.Colors[y, yHeight - x];
+        end
+        else
+        begin
+          for y:= 0 to xWidth do
+            for x:= 0 to yHeight do
+              Target.Colors[x, y]:= Source.Colors[xWidth - y, x];
+        end;
+      end;
+      ARaster.LoadFromIntfImage(Target);
+    finally
+      Target.Free;
+    end;
+  finally
+    Source.Free;
+  end;
+end;
+
+procedure BitmapMirror(ARaster: TRasterImage; AVertically: Boolean);
+// Mirrors the image in place; AVertically swaps top and bottom.
+var
+  Source, Target: TLazIntfImage;
+  x, y, xWidth, yHeight: Integer;
+begin
+  if (ARaster = nil) or (ARaster.Width <= 0) or (ARaster.Height <= 0) then Exit;
+  Source:= ARaster.CreateIntfImage;
+  try
+    Target:= TLazIntfImage.Create(0, 0);
+    try
+      Target.DataDescription:= Source.DataDescription; // use the same image format
+      xWidth:= Source.Width - 1;
+      yHeight:= Source.Height - 1;
+      Target.SetSize(xWidth + 1, yHeight + 1);
+      if AVertically then
+      begin
+        for y:= 0 to yHeight do
+          for x:= 0 to xWidth do
+            Target.Colors[x, y]:= Source.Colors[x, yHeight - y];
+      end
+      else
+      begin
+        for y:= 0 to yHeight do
+          for x:= 0 to xWidth do
+            Target.Colors[x, y]:= Source.Colors[xWidth - x, y];
+      end;
+      ARaster.LoadFromIntfImage(Target);
+    finally
+      Target.Free;
+    end;
+  finally
+    Source.Free;
   end;
 end;
 

@@ -46,10 +46,15 @@ type
     class function GetPreviewFromProvider(const aFileName: String; aSize: TSize; aSkip: Integer): TBitmap;
   end;
 
+// Applies the EXIF orientation of aFileName to ARaster so that the image is
+// upright. Returns True when the image was turned or mirrored.
+// JPEG only: TExifReader reads the EXIF block of an APP1 segment.
+function ApplyExifOrientation(const aFileName: String; ARaster: TRasterImage): Boolean;
+
 implementation
 
 uses
-  StreamEx, URIParser, MD5, FileUtil, LazFileUtils, Forms, DCOSUtils, DCStrUtils,
+  StreamEx, URIParser, MD5, FileUtil, LazFileUtils, Forms, DCOSUtils, DCStrUtils, uExifReader,
   uDebug, uReSample, uGlobsPaths, uGlobs, uPixmapManager, uFileSystemFileSource,
   uGraphics, uFileProcs;
 
@@ -267,6 +272,10 @@ begin
             with Picture do
             try
               LoadFromStreamWithFileExt(fsFileStream, sExt);
+              // The EXIF orientation has to be applied before the thumbnail size
+              // is calculated, turning the image swaps width and height.
+              if Graphic is TRasterImage then
+                ApplyExifOrientation(sFullPathToFile, TRasterImage(Graphic));
               if (Graphic.Width > gThumbSize.cx) or (Graphic.Height > gThumbSize.cy) then
                 Result:= CreatePreviewImage(Graphic)
               else
@@ -385,6 +394,33 @@ begin
     end;
   end;
   Result:= nil;
+end;
+
+function ApplyExifOrientation(const aFileName: String; ARaster: TRasterImage): Boolean;
+begin
+  Result:= False;
+  if not gImageExifRotate then Exit;
+  if (ARaster = nil) or (ARaster.Width <= 0) or (ARaster.Height <= 0) then Exit;
+  with TExifReader.Create do
+  try
+    if not LoadFromFile(aFileName) then Exit;
+    case Orientation of
+      2: BitmapMirror(ARaster, False);                              // mirror horizontal
+      3: BitmapRotate(ARaster, 180);                                // rotate 180 CW
+      4: BitmapMirror(ARaster, True);                               // mirror vertical
+      5: begin BitmapRotate(ARaster, 90);                           // transpose
+                BitmapMirror(ARaster, False); end;
+      6: BitmapRotate(ARaster, 90);                                 // rotate 90 CW
+      7: begin BitmapMirror(ARaster, False);                        // transverse
+                BitmapRotate(ARaster, 90); end;
+      8: BitmapRotate(ARaster, 270);                                // rotate 270 CW
+    else
+      Exit;
+    end;
+    Result:= True;
+  finally
+    Free;
+  end;
 end;
 
 end.
