@@ -1,0 +1,67 @@
+#!/usr/bin/make -f
+
+export DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+# Set temporary HOME for lazarus primary config directory
+export HOME=$(CURDIR)/tmphome
+
+%:
+	dh $@
+
+override_dh_install:
+	cd language ;\
+		if [ -f doublecmd.po ] ; then mv doublecmd.po doublecmd.en.po; fi ;
+
+	# Remove convenience copy of Free Pascal Qt4 binding, use libqt4pas-dev instead
+	rm -f plugins/wlx/WlxMplayer/src/qt4.pas
+
+	# Build GTK2 version
+	./build.sh beta gtk2
+	./install/linux/install.sh --install-prefix=$(CURDIR)/debian/doublecmd-common
+	./clean.sh
+
+	# Build Qt5 version
+	./build.sh beta qt5
+	./install/linux/install.sh --install-prefix=$(CURDIR)/debian/doublecmd-qt-temp
+	./clean.sh
+
+	# Separate GTK2-specific files
+	mkdir -p $(CURDIR)/debian/doublecmd-gtk/usr/lib/doublecmd/plugins
+	mv $(CURDIR)/debian/doublecmd-common/usr/lib/doublecmd/doublecmd $(CURDIR)/debian/doublecmd-gtk/usr/lib/doublecmd/
+	mv $(CURDIR)/debian/doublecmd-common/usr/lib/doublecmd/plugins/wlx $(CURDIR)/debian/doublecmd-gtk/usr/lib/doublecmd/plugins/
+	mv $(CURDIR)/debian/doublecmd-common/usr/lib/doublecmd/doublecmd.zdli $(CURDIR)/debian/doublecmd-gtk/usr/lib/doublecmd/
+
+	# Separate Qt5-specific files
+	mkdir -p $(CURDIR)/debian/doublecmd-qt/usr/lib/doublecmd/plugins
+	mv $(CURDIR)/debian/doublecmd-qt-temp/usr/lib/doublecmd/doublecmd $(CURDIR)/debian/doublecmd-qt/usr/lib/doublecmd/
+	mv $(CURDIR)/debian/doublecmd-qt-temp/usr/lib/doublecmd/plugins/wlx $(CURDIR)/debian/doublecmd-qt/usr/lib/doublecmd/plugins/
+	mv $(CURDIR)/debian/doublecmd-qt-temp/usr/lib/doublecmd/doublecmd.zdli $(CURDIR)/debian/doublecmd-qt/usr/lib/doublecmd/
+	rm -rf $(CURDIR)/debian/doublecmd-qt-temp/
+
+	# Separate plugins
+	mkdir -p $(CURDIR)/debian/doublecmd-plugins/usr/lib/doublecmd
+	mv $(CURDIR)/debian/doublecmd-common/usr/lib/doublecmd/plugins $(CURDIR)/debian/doublecmd-plugins/usr/lib/doublecmd
+
+	# Clean up common files
+	rm -rf $(CURDIR)/debian/doublecmd-common/usr/share/doublecmd/doc
+	find $(CURDIR)/debian/doublecmd-common/usr/share/ -type f | xargs chmod a-x ;
+
+	# Install icons for AppStream
+	rm -rf $(CURDIR)/debian/doublecmd-common/usr/share/pixmaps/
+	rm -f $(CURDIR)/debian/doublecmd-common/usr/share/icons/hicolor/scalable/apps/doublecmd.svg
+	cp $(CURDIR)/debian/doublecmd-common/usr/share/doublecmd/pixmaps/mainicon/alt/dcfinal.svg $(CURDIR)/debian/doublecmd-common/usr/share/icons/hicolor/scalable/apps/doublecmd.svg
+	mkdir -p $(CURDIR)/debian/doublecmd-common/usr/share/icons/hicolor/128x128/apps
+	cp $(CURDIR)/debian/doublecmd-common/usr/share/doublecmd/pixmaps/mainicon/alt/128px-dcfinal.png $(CURDIR)/debian/doublecmd-common/usr/share/icons/hicolor/128x128/apps/doublecmd.png
+	mkdir -p $(CURDIR)/debian/doublecmd-common/usr/share/icons/hicolor/256x256/apps
+	cp $(CURDIR)/debian/doublecmd-common/usr/share/doublecmd/pixmaps/mainicon/alt/256px-dcfinal.png $(CURDIR)/debian/doublecmd-common/usr/share/icons/hicolor/256x256/apps/doublecmd.png
+
+	dh_install
+
+override_dh_clean:
+	./clean.sh
+
+	cd language ;\
+		if [ -f doublecmd.en.po ] ; then mv doublecmd.en.po doublecmd.po; fi ;
+	# Clean up temporary HOME
+	rm -rf $(CURDIR)/tmphome
+	dh_clean

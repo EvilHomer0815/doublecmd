@@ -1,0 +1,21 @@
+Description: Do not display build info in window title
+Author: Graham Inggs <ginggs@debian.org>
+Forwarded: not-needed
+Last-Update: 2022-10-10
+
+--- a/src/fmain.pas
++++ b/src/fmain.pas
+@@ -1088,11 +1088,9 @@
+       ARevision:= EmptyStr;
+     end;
+ 
+-    Result := Format('%s%s %s%s',
++    Result := Format('%s%s',
+         ['Double Commander',
+-        AServerName,
+-        Copy2Space(dcVersion),
+-        ARevision]
++        AServerName]
+     );
+   end;
+ 

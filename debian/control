@@ -1,0 +1,95 @@
+Source: doublecmd
+Section: utils
+Maintainer: Pascal Packaging Team <pkg-pascal-devel@lists.alioth.debian.org>
+Uploaders: Graham Inggs <ginggs@debian.org>,
+           Abou Al Montacir <abou.almontacir@sfr.fr>
+Build-Depends: debhelper-compat (= 13),
+               fp-units-gfx,
+               fp-units-misc,
+               fp-units-net,
+               lcl-gtk2,
+               lcl-qt5,
+               lcl-units,
+               lcl-utils,
+               libbz2-dev,
+               libdbus-1-dev,
+               libglib2.0-dev,
+               libgtk2.0-dev,
+               libqt5pas-dev
+Standards-Version: 4.7.3
+Vcs-Git: https://salsa.debian.org/pascal-team/doublecmd.git
+Vcs-Browser: https://salsa.debian.org/pascal-team/doublecmd
+Homepage: https://doublecmd.sourceforge.io
+
+Package: doublecmd-gtk
+Architecture: any
+Depends: doublecmd-common (= ${source:Version}),
+         doublecmd-plugins (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Provides: doublecmd
+Conflicts: doublecmd
+Replaces: doublecmd
+Description: twin-panel (commander-style) file manager (GTK2)
+ Double Commander is a cross platform open source file manager
+ with two panels side by side. It is inspired by Total Commander
+ and features some new ideas.
+ .
+ Support for RAR archives can be enabled by installing the
+ libunrar5 package from non-free.
+ .
+ This package contains the GTK2 user interface.
+
+Package: doublecmd-qt
+Architecture: any
+Depends: doublecmd-common (= ${source:Version}),
+         doublecmd-plugins (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Provides: doublecmd
+Conflicts: doublecmd
+Replaces: doublecmd
+Description: twin-panel (commander-style) file manager (Qt5)
+ Double Commander is a cross platform open source file manager
+ with two panels side by side. It is inspired by Total Commander
+ and features some new ideas.
+ .
+ Support for RAR archives can be enabled by installing the
+ libunrar5 package from non-free.
+ .
+ This package contains the Qt5 user interface.
+
+Package: doublecmd-plugins
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: twin-panel (commander-style) file manager (plugins)
+ Double Commander is a cross platform open source file manager
+ with two panels side by side. It is inspired by Total Commander
+ and features some new ideas.
+ .
+ Support for RAR archives can be enabled by installing the
+ libunrar5 package from non-free.
+ .
+ This package contains plugins.
+
+Package: doublecmd-common
+Architecture: all
+Multi-Arch: foreign
+Recommends: doublecmd-gtk | doublecmd-qt
+Depends: desktop-file-utils, ${misc:Depends}
+Suggests: doublecmd-help-en | doublecmd-help,
+          libffmpegthumbnailer4v5,
+          libunrar5,
+          mplayer,
+          rabbitvcs-core,
+          xterm | x-terminal-emulator
+Description: twin-panel (commander-style) file manager
+ Double Commander is a cross platform open source file manager
+ with two panels side by side. It is inspired by Total Commander
+ and features some new ideas.
+ .
+ Support for RAR archives can be enabled by installing the
+ libunrar-dev package from non-free.
+ .
+ This package contains common files.

@@ -1,0 +1,3 @@
+# These are plugins, not shared libraries
+shared-library-lacks-prerequisites [usr/lib/doublecmd/plugins/dsx/dsxlocate/dsxlocate.dsx]
+shared-library-lacks-prerequisites [usr/lib/doublecmd/plugins/wdx/rpm_wdx/rpm_wdx.wdx]
